@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { ApiKeyGuard } from './guards/api-key.guard';
 
 @Module({
-  providers: [ApiKeyGuard],
-  exports: [ApiKeyGuard],
+	imports: [ConfigModule.forRoot({ isGlobal: true })],
+	providers: [ApiKeyGuard],
+	exports: [ApiKeyGuard],
 })
 export class CommonModule {}
