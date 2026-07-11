@@ -14,8 +14,9 @@ export function createSchema(sqlite: Database.Database): void {
 	sqlite.exec(`
 		CREATE TABLE IF NOT EXISTS machines (
 			id TEXT PRIMARY KEY,
-			machine_uuid TEXT NOT NULL,
+			machine_id TEXT NOT NULL,
 			machine_secret_hash TEXT NOT NULL,
+			registration_status TEXT NOT NULL DEFAULT 'self',
 			created_at TEXT NOT NULL,
 			updated_at TEXT NOT NULL
 		)

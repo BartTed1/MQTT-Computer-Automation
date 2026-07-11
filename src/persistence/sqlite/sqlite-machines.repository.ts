@@ -40,8 +40,9 @@ export class SqliteMachinesRepository implements MachinesRepository {
 		const now = new Date().toISOString();
 		const machine: Machine = {
 			id: input.id,
-			machineUUID: input.machineUUID,
+			machineId: input.machineId,
 			machineSecretHash: input.machineSecretHash,
+			registrationStatus: input.registrationStatus,
 			createdAt: now,
 			updatedAt: now,
 		};
@@ -66,7 +67,7 @@ export class SqliteMachinesRepository implements MachinesRepository {
 		this.db
 			.update(machines)
 			.set({
-				machineUUID: updated.machineUUID,
+				machineId: updated.machineId,
 				machineSecretHash: updated.machineSecretHash,
 				updatedAt: updated.updatedAt,
 			})

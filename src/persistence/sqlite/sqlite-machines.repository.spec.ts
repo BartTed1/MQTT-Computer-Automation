@@ -24,26 +24,29 @@ describe('SqliteMachinesRepository', () => {
 	it('creates and finds a machine by id', () => {
 		const created = repository.create({
 			id: 'pc-1',
-			machineUUID: 'uuid-1',
+			machineId: 'uuid-1',
 			machineSecretHash: 'hash-1',
+			registrationStatus: 'self',
 		});
 
-		expect(created.machineUUID).toBe('uuid-1');
+		expect(created.machineId).toBe('uuid-1');
 		expect(repository.findById('pc-1')).toEqual(created);
 	});
 
 	it('throws a conflict when creating a duplicate id', () => {
 		repository.create({
 			id: 'pc-1',
-			machineUUID: 'uuid-1',
+			machineId: 'uuid-1',
 			machineSecretHash: 'hash-1',
+			registrationStatus: 'self',
 		});
 
 		expect(() =>
 			repository.create({
 				id: 'pc-1',
-				machineUUID: 'uuid-2',
+				machineId: 'uuid-2',
 				machineSecretHash: 'hash-2',
+				registrationStatus: 'self',
 			}),
 		).toThrow(ConflictException);
 	});
@@ -51,13 +54,15 @@ describe('SqliteMachinesRepository', () => {
 	it('returns all machines', () => {
 		repository.create({
 			id: 'pc-1',
-			machineUUID: 'uuid-1',
+			machineId: 'uuid-1',
 			machineSecretHash: 'hash-1',
+			registrationStatus: 'self',
 		});
 		repository.create({
 			id: 'pc-2',
-			machineUUID: 'uuid-2',
+			machineId: 'uuid-2',
 			machineSecretHash: 'hash-2',
+			registrationStatus: 'self',
 		});
 
 		expect(repository.findAll()).toHaveLength(2);
@@ -66,8 +71,9 @@ describe('SqliteMachinesRepository', () => {
 	it('updates an existing machine', () => {
 		repository.create({
 			id: 'pc-1',
-			machineUUID: 'uuid-1',
+			machineId: 'uuid-1',
 			machineSecretHash: 'hash-1',
+			registrationStatus: 'self',
 		});
 
 		const updated = repository.update('pc-1', { machineSecretHash: 'hash-2' });
@@ -85,8 +91,9 @@ describe('SqliteMachinesRepository', () => {
 	it('deletes a machine', () => {
 		repository.create({
 			id: 'pc-1',
-			machineUUID: 'uuid-1',
+			machineId: 'uuid-1',
 			machineSecretHash: 'hash-1',
+			registrationStatus: 'self',
 		});
 
 		repository.delete('pc-1');
