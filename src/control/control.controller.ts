@@ -2,6 +2,7 @@ import { Controller, Query, Sse } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ControlService } from './control.service';
 import { ApiKeyAuth } from '../common/decorators/api-key-auth.decorator';
+import { ApiKeySystem } from '../common/guards/api-key-system.enum';
 
 @ApiTags('control')
 @Controller('control')
@@ -11,7 +12,7 @@ export class ControlController {
 	@ApiOperation({
 		summary: 'Publish a command and observe its resulting event stream',
 	})
-	@ApiKeyAuth()
+	@ApiKeyAuth(ApiKeySystem.EXTERNAL_ORCHESTRATOR)
 	@Sse('publish-and-observe')
 	publishAndObserve(
 		@Query('machineId') machineId: string,
