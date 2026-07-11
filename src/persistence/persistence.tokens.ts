@@ -1,0 +1,1 @@
+export const MACHINES_REPOSITORY = Symbol('MACHINES_REPOSITORY');
