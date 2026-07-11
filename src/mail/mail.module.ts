@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { NoopMailSender } from './noop/noop-mail-sender';
+import { SmtpMailSender } from './smtp/smtp-mail-sender';
 import { MAIL_SENDER } from './mail.tokens';
 
 @Module({
-	providers: [{ provide: MAIL_SENDER, useClass: NoopMailSender }],
+	providers: [{ provide: MAIL_SENDER, useClass: SmtpMailSender }],
 	exports: [MAIL_SENDER],
 })
 export class MailModule {}
