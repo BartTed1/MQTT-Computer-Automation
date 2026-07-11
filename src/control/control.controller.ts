@@ -1,4 +1,4 @@
-import { Controller, Sse } from '@nestjs/common';
+import { Controller, Query, Sse } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ControlService } from './control.service';
 import { ApiKeyAuth } from '../common/decorators/api-key-auth.decorator';
@@ -13,7 +13,11 @@ export class ControlController {
 	})
 	@ApiKeyAuth()
 	@Sse('publish-and-observe')
-	publishAndObserve() {
-		return this.controlService.publishAndObserve();
+	publishAndObserve(
+		@Query('machineId') machineId: string,
+		@Query('command') command: string,
+		@Query('params') params: string,
+	) {
+		return this.controlService.publishAndObserve(machineId, command, params);
 	}
 }
