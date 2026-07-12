@@ -2,6 +2,7 @@ import { Inject, Injectable, Logger, MessageEvent } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Observable } from 'rxjs';
 import { MqttCommunication } from '../mqtt/interfaces/mqtt.interface';
+import { MQTT_COMMUNICATION } from '../mqtt/mqtt.tokens';
 
 @Injectable()
 export class ControlService {
@@ -9,7 +10,7 @@ export class ControlService {
 	private lock = new Set<string>();
 
 	constructor(
-		@Inject('MqttCommunication')
+		@Inject(MQTT_COMMUNICATION)
 		private readonly mqttCommunication: MqttCommunication,
 		private readonly configService: ConfigService,
 	) {}
