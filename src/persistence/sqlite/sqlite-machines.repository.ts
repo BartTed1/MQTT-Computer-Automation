@@ -77,6 +77,7 @@ export class SqliteMachinesRepository implements MachinesRepository {
 			.set({
 				machineId: updated.machineId,
 				machineSecretHash: updated.machineSecretHash,
+				registrationStatus: updated.registrationStatus,
 				updatedAt: updated.updatedAt,
 			})
 			.where(eq(machines.id, id))

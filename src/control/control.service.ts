@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Observable } from 'rxjs';
 import { MqttCommunication } from '../mqtt/interfaces/mqtt.interface';
 import { MQTT_COMMUNICATION } from '../mqtt/mqtt.tokens';
+import { machineInTopic, machineOutTopic } from '../mqtt/mqtt-topics';
 
 @Injectable()
 export class ControlService {
@@ -40,8 +41,8 @@ export class ControlService {
 		this.logger.log(`Lock acquired for machine ${machineId}.`);
 
 		return new Observable<MessageEvent>((subscriber) => {
-			const topic = `machines/${machineId}/commands`;
-			const subscriptionTopic = `machines/${machineId}/events`;
+			const topic = machineInTopic(machineId);
+			const subscriptionTopic = machineOutTopic(machineId);
 			const paramsArray = params ? params.split(',') : [];
 			const message = JSON.stringify({ command, params: paramsArray });
 			const qos = 1;

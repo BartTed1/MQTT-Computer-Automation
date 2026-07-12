@@ -82,6 +82,20 @@ describe('SqliteMachinesRepository', () => {
 		expect(repository.findById('pc-1')?.machineSecretHash).toBe('hash-2');
 	});
 
+	it('persists a registrationStatus update', () => {
+		repository.create({
+			id: 'pc-1',
+			machineId: 'uuid-1',
+			machineSecretHash: 'hash-1',
+			registrationStatus: 'self',
+		});
+
+		const updated = repository.update('pc-1', { registrationStatus: 'confirmed' });
+
+		expect(updated.registrationStatus).toBe('confirmed');
+		expect(repository.findById('pc-1')?.registrationStatus).toBe('confirmed');
+	});
+
 	it('throws not found when updating an unknown machine', () => {
 		expect(() =>
 			repository.update('missing', { machineSecretHash: 'hash-2' }),
