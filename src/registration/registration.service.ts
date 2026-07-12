@@ -4,16 +4,19 @@ import { MachinesRepository } from '../persistence/interfaces/machines-repositor
 import { MACHINES_REPOSITORY } from '../persistence/persistence.tokens';
 import { Machine } from '../persistence/interfaces/machine.interface';
 import { hashSecret } from '../common/security/secret-hasher';
+import { JsonEncryptionService } from '../common/security/json-encryption.service';
 
 @Injectable()
 export class RegistrationService {
 	constructor(
 		@Inject(MACHINES_REPOSITORY)
 		private readonly machinesRepository: MachinesRepository,
+
+		private readonly jsonEncryptionService: JsonEncryptionService,
 	) {}
 
-	async selfRegister(machineId: UUID, machineSecret: string): Promise<boolean> {
-		const existingMachine: Machine | undefined = await this.machinesRepository.findById(machineId);
+	async selfRegister(machineId: UUID, machineSecret: string): Promise<string> {
+		const existingMachine: Machine | undefined = this.machinesRepository.findByMachineId(machineId);
 		if (existingMachine) {
 			throw new ConflictException(`Machine with ID ${machineId} already exists.`);
 		}
@@ -27,6 +30,10 @@ export class RegistrationService {
 			registrationStatus: 'self',
 		});
 
-		return true;
+		return this.jsonEncryptionService.encrypt({
+			machineId,
+			machineSecret,
+			issuedAt: new Date().toISOString(),
+		});
 	}
 }

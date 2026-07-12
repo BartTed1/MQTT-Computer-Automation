@@ -32,6 +32,14 @@ export class SqliteMachinesRepository implements MachinesRepository {
 			.get() as Machine | undefined;
 	}
 
+	findByMachineId(machineId: string): Machine | undefined {
+		return this.db
+			.select()
+			.from(machines)
+			.where(eq(machines.machineId, machineId))
+			.get() as Machine | undefined;
+	}
+
 	create(input: CreateMachineInput): Machine {
 		if (this.findById(input.id)) {
 			throw new ConflictException(`Machine "${input.id}" already exists`);
