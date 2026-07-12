@@ -1,4 +1,10 @@
-import { ConflictException, Inject, Injectable } from '@nestjs/common';
+import {
+	ConflictException,
+	Inject,
+	Injectable,
+	UnauthorizedException,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { randomUUID, UUID } from 'crypto';
 import { MachinesRepository } from '../persistence/interfaces/machines-repository.interface';
 import { MACHINES_REPOSITORY } from '../persistence/persistence.tokens';
@@ -13,6 +19,8 @@ export class RegistrationService {
 		private readonly machinesRepository: MachinesRepository,
 
 		private readonly jsonEncryptionService: JsonEncryptionService,
+
+		private readonly configService: ConfigService,
 	) {}
 
 	async selfRegister(machineId: UUID, machineSecret: string): Promise<string> {
@@ -35,5 +43,45 @@ export class RegistrationService {
 			machineSecret,
 			issuedAt: new Date().toISOString(),
 		});
+	}
+
+	async confirmRegistration(token: string) {
+		const decryptedData = this.jsonEncryptionService.decrypt<{
+			machineId: UUID;
+			machineSecret: string;
+			issuedAt: string;
+		}>(token);
+
+		this.assertTokenNotExpired(decryptedData.issuedAt);
+
+		const existingMachine: Machine | undefined = this.machinesRepository.findByMachineId(decryptedData.machineId);
+		if (!existingMachine) {
+			throw new ConflictException(`Machine with ID ${decryptedData.machineId} does not exist.`);
+		}
+
+		if (existingMachine.registrationStatus === 'confirmed') {
+			throw new ConflictException(`Machine with ID ${decryptedData.machineId} is already confirmed.`);
+		}
+
+		const machineSecretHash = await hashSecret(decryptedData.machineSecret);
+
+		this.machinesRepository.update(existingMachine.id, {
+			machineSecretHash,
+			registrationStatus: 'confirmed',
+		});
+	}
+
+	private assertTokenNotExpired(issuedAt: string): void {
+		const ttlMinutes = Number(
+			this.configService.get<string>('REGISTRATION_TOKEN_TTL_MINUTES'),
+		);
+		if (!ttlMinutes || Number.isNaN(ttlMinutes)) {
+			throw new Error('REGISTRATION_TOKEN_TTL_MINUTES is not configured');
+		}
+
+		const expiresAt = new Date(issuedAt).getTime() + ttlMinutes * 60_000;
+		if (Date.now() > expiresAt) {
+			throw new UnauthorizedException('Registration token has expired');
+		}
 	}
 }

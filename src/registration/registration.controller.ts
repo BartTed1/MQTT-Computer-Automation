@@ -4,6 +4,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RegistrationService } from './registration.service';
 import { ApiKeyAuth } from '../common/decorators/api-key-auth.decorator';
 import { ApiKeySystem } from '../common/guards/api-key-system.enum';
+import { RegistrationConfirmationRequestDto } from './interfaces/registration-confirmation-request.dto';
 
 @ApiTags('registration')
 @Controller('registration')
@@ -32,11 +33,10 @@ export class RegistrationController {
 	@HttpCode(HttpStatus.OK)
 	@Header('Cache-Control', 'no-store')
 	async confirmRegistration(
-		@Body() registrationData: SelfRegistrationRequestDto
+		@Body() registrationData: RegistrationConfirmationRequestDto
 	): Promise<void> {
-		await this.registrationService.selfRegister(
-			registrationData.machineId, 
-			registrationData.machineSecret
+		await this.registrationService.confirmRegistration(
+			registrationData.token
 		);
 	}
 }
