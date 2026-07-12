@@ -1,0 +1,1 @@
+export const MQTT_COMMUNICATION = Symbol('MQTT_COMMUNICATION');
