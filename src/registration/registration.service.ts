@@ -84,4 +84,19 @@ export class RegistrationService {
 			throw new UnauthorizedException('Registration token has expired');
 		}
 	}
+
+	async revokeRegistration(machineId: UUID) {
+		const existingMachine: Machine | undefined = this.machinesRepository.findByMachineId(machineId);
+		if (!existingMachine) {
+			throw new ConflictException(`Machine with ID ${machineId} does not exist.`);
+		}
+
+		if (existingMachine.registrationStatus === 'revoked') {
+			throw new ConflictException(`Machine with ID ${machineId} is already revoked.`);
+		}
+
+		this.machinesRepository.update(existingMachine.id, {
+			registrationStatus: 'revoked',
+		});
+	}
 }

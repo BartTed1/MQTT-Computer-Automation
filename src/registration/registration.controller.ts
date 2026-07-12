@@ -1,10 +1,11 @@
-import { Body, Controller, Header, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Header, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post } from '@nestjs/common';
 import { SelfRegistrationRequestDto } from './interfaces/self-registration-request.dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RegistrationService } from './registration.service';
 import { ApiKeyAuth } from '../common/decorators/api-key-auth.decorator';
 import { ApiKeySystem } from '../common/guards/api-key-system.enum';
 import { RegistrationConfirmationRequestDto } from './interfaces/registration-confirmation-request.dto';
+import { UUID } from 'crypto';
 
 @ApiTags('registration')
 @Controller('registration')
@@ -35,8 +36,17 @@ export class RegistrationController {
 	async confirmRegistration(
 		@Body() registrationData: RegistrationConfirmationRequestDto
 	): Promise<void> {
-		await this.registrationService.confirmRegistration(
-			registrationData.token
-		);
+		await this.registrationService.confirmRegistration(registrationData.token);
+	}
+
+	@ApiOperation({ summary: 'Revoke registration from external orchestrator' })
+	@ApiKeyAuth(ApiKeySystem.EXTERNAL_ORCHESTRATOR)
+	@Delete('revoke/:machineId')
+	@HttpCode(HttpStatus.OK)
+	@Header('Cache-Control', 'no-store')
+	async revokeRegistrationFromOrchestrator(
+		@Param('machineId', new ParseUUIDPipe({ version: '4' })) machineId: UUID,
+	): Promise<void> {
+		await this.registrationService.revokeRegistration(machineId);
 	}
 }
