@@ -14,8 +14,9 @@ export class MqttBrokerService implements MqttCommunication, OnModuleInit, OnMod
 	private server: Server;
 	private readonly port = 1883;
 
-	onModuleInit() {
+	async onModuleInit() {
 		this.aedes = new Aedes();
+		await this.aedes.listen();
 		this.server = new Server(this.aedes.handle);
 		this.server.listen(this.port, () => {
 			this.logger.log(`MQTT broker is running on port ${this.port}`);
@@ -23,7 +24,8 @@ export class MqttBrokerService implements MqttCommunication, OnModuleInit, OnMod
 	}
 
 	onModuleDestroy() {
-		this.server.close(() => {
+		this.server.close();
+		this.aedes.close(() => {
 			this.logger.log("MQTT broker has been stopped");
 		});
 	}
