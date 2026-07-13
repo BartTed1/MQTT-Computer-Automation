@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import {
 	Aedes,
 	AedesPublishPacket,
@@ -8,7 +9,9 @@ import {
 	PublishPacket,
 	Subscription,
 } from "aedes";
-import { Server } from "net";
+import { Server as NetServer, createServer as createNetServer } from "net";
+import { createServer as createTlsServer } from "tls";
+import { readFileSync } from "fs";
 import { MqttCommunication } from "./interfaces/mqtt.interface";
 import { machineInTopic, machineOutTopic } from "./mqtt-topics";
 import { MachinesRepository } from "../persistence/interfaces/machines-repository.interface";
@@ -23,13 +26,14 @@ export interface MqttSubscription {
 export class MqttBrokerService implements MqttCommunication, OnModuleInit, OnModuleDestroy {
 	private readonly logger = new Logger(MqttBrokerService.name);
 	private aedes: Aedes;
-	private server: Server;
-	private readonly port = 1883;
+	private server: NetServer;
+	private readonly plaintextPort = 1883;
 	private readonly clientMachineIds = new WeakMap<Client, string>();
 
 	constructor(
 		@Inject(MACHINES_REPOSITORY)
 		private readonly machinesRepository: MachinesRepository,
+		private readonly configService: ConfigService,
 	) {}
 
 	async onModuleInit() {
@@ -39,10 +43,28 @@ export class MqttBrokerService implements MqttCommunication, OnModuleInit, OnMod
 			authorizeSubscribe: this.authorizeSubscribe,
 		});
 		await this.aedes.listen();
-		this.server = new Server(this.aedes.handle);
-		this.server.listen(this.port, () => {
-			this.logger.log(`MQTT broker is running on port ${this.port}`);
-		});
+
+		const certPath = this.configService.get<string>('MQTT_TLS_CERT_PATH');
+		const keyPath = this.configService.get<string>('MQTT_TLS_KEY_PATH');
+
+		if (certPath && keyPath) {
+			const tlsPort = Number(this.configService.get<string>('MQTT_TLS_PORT')) || 8883;
+			const cert = readFileSync(certPath);
+			const key = readFileSync(keyPath);
+			this.server = createTlsServer({ cert, key }, this.aedes.handle);
+			this.server.listen(tlsPort, () => {
+				this.logger.log(`MQTT broker is running on port ${tlsPort} (TLS)`);
+			});
+		} else {
+			this.logger.warn(
+				'MQTT_TLS_CERT_PATH/MQTT_TLS_KEY_PATH not configured — MQTT broker is running in plaintext. ' +
+				'Not suitable for untrusted networks; credentials and commands travel unencrypted.',
+			);
+			this.server = createNetServer(this.aedes.handle);
+			this.server.listen(this.plaintextPort, () => {
+				this.logger.log(`MQTT broker is running on port ${this.plaintextPort} (plaintext)`);
+			});
+		}
 	}
 
 	onModuleDestroy() {
