@@ -62,12 +62,13 @@ describe('RegistrationService', () => {
 			});
 			machinesRepository.findByMachineId.mockReturnValue(existingMachine);
 
-			await service.confirmRegistration('token');
+			const result = await service.confirmRegistration('token');
 
 			expect(machinesRepository.update).toHaveBeenCalledWith(
 				existingMachine.id,
 				expect.objectContaining({ registrationStatus: 'confirmed' }),
 			);
+			expect(result).toEqual({ machineId });
 		});
 
 		it('rejects a token issued more than the configured TTL ago', async () => {

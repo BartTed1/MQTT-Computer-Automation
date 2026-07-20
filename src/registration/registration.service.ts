@@ -45,7 +45,7 @@ export class RegistrationService {
 		});
 	}
 
-	async confirmRegistration(token: string) {
+	async confirmRegistration(token: string): Promise<{ machineId: UUID }> {
 		const decryptedData = this.jsonEncryptionService.decrypt<{
 			machineId: UUID;
 			machineSecret: string;
@@ -69,6 +69,8 @@ export class RegistrationService {
 			machineSecretHash,
 			registrationStatus: 'confirmed',
 		});
+
+		return { machineId: decryptedData.machineId };
 	}
 
 	private assertTokenNotExpired(issuedAt: string): void {

@@ -35,8 +35,8 @@ export class RegistrationController {
 	@Header('Cache-Control', 'no-store')
 	async confirmRegistration(
 		@Body() registrationData: RegistrationConfirmationRequestDto
-	): Promise<void> {
-		await this.registrationService.confirmRegistration(registrationData.token);
+	): Promise<{ machineId: UUID }> {
+		return this.registrationService.confirmRegistration(registrationData.token);
 	}
 
 	@ApiOperation({ summary: 'Revoke registration from external orchestrator' })
