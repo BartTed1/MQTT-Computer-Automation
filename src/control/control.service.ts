@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 import { MqttCommunication } from '../mqtt/interfaces/mqtt.interface';
 import { MQTT_COMMUNICATION } from '../mqtt/mqtt.tokens';
 import { machineInTopic, machineOutTopic } from '../mqtt/mqtt-topics';
+import { CommandSigningService } from '../common/security/command-signing.service';
+import { buildCanonicalCommandString } from './command-canonical-payload';
 
 @Injectable()
 export class ControlService {
@@ -14,6 +16,7 @@ export class ControlService {
 		@Inject(MQTT_COMMUNICATION)
 		private readonly mqttCommunication: MqttCommunication,
 		private readonly configService: ConfigService,
+		private readonly commandSigningService: CommandSigningService,
 	) {}
 
 	publishAndObserve(
@@ -37,14 +40,36 @@ export class ControlService {
 			});
 		}
 
+		const paramsArray = params ? params.split(',') : [];
+		const timestamp = Math.floor(Date.now() / 1000);
+		let message: string;
+		try {
+			const canonicalPayload = buildCanonicalCommandString({
+				machineId,
+				command,
+				params: paramsArray,
+				timestamp,
+			});
+			const signature = this.commandSigningService.sign(canonicalPayload);
+			message = JSON.stringify({
+				machineId,
+				command,
+				params: paramsArray,
+				timestamp,
+				signature,
+			});
+		} catch (err) {
+			return new Observable<MessageEvent>((subscriber) => {
+				subscriber.error(err instanceof Error ? err : new Error(String(err)));
+			});
+		}
+
 		this.lock.add(machineId);
 		this.logger.log(`Lock acquired for machine ${machineId}.`);
 
 		return new Observable<MessageEvent>((subscriber) => {
 			const topic = machineInTopic(machineId);
 			const subscriptionTopic = machineOutTopic(machineId);
-			const paramsArray = params ? params.split(',') : [];
-			const message = JSON.stringify({ command, params: paramsArray });
 			const qos = 1;
 
 			let timeoutHandle: ReturnType<typeof setTimeout>;
